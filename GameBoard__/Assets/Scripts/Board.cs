@@ -1,0 +1,103 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Board : MonoBehaviour
+{
+    [SerializeField] private int width;
+    [SerializeField] private int heigth;
+
+    public GameObject elementPrefab;
+    public Transform _thisTransform;
+    private Element[,] allElements;
+    public Sprite[] pool;
+
+    void Start()
+    {
+        allElements = new Element[width, heigth];
+
+        InitBoard();
+    }
+
+    private void InitBoard()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < heigth; j++)
+            {
+                Vector2 pos = new Vector2(_thisTransform.position.x + i, _thisTransform.position.y + j);
+                GameObject piece = Instantiate(elementPrefab, pos, Quaternion.identity);
+                Element newElement = new Element(piece);
+
+                newElement.piece.transform.parent = _thisTransform;
+                newElement.piece.name = "( " + i + "," + j + " )";
+                newElement.posX = i;
+                newElement.posY = j;
+
+                do
+                {
+                    newElement.type = Random.Range(0, pool.Length);
+                    newElement.spriteRenderer.sprite = pool[newElement.type];
+                } while (isItMatch(newElement));
+
+                allElements[i, j] = newElement;
+            }
+        }
+    }
+
+    private bool isItMatch(Element _elem)
+    {
+        bool isMatch = false;
+
+        if (_elem.posX > 1 && _elem.posY > 1)
+        {
+            int i = 1;
+            do
+            {
+                if (allElements[_elem.posX - i, _elem.posY].type == _elem.type ||
+                    allElements[_elem.posX, _elem.posY - i].type == _elem.type //||
+                    /*allElements[_elem.posX - i, _elem.posY - i].type == _elem.type*/)
+                    isMatch = true;
+
+                //Включать если пул элементов > 4
+                //if(_elem.posY < heigth - 2)
+                //    if(allElements[_elem.posX - i, _elem.posY + i].type == _elem.type)
+                //        isMatch = true;
+
+                i++;
+            } while (isMatch && i < 3);
+        }
+        else
+        {
+
+            if (_elem.posX > 1)
+            {
+                int i = 1;
+                do
+                {
+                    if (allElements[_elem.posX - i, _elem.posY].type == _elem.type)
+                        isMatch = true;
+
+                    //if (_elem.posY < heigth - 2)
+                    //    if (allElements[_elem.posX - i, _elem.posY + i].type == _elem.type)
+                    //        isMatch = true;
+
+                    i++;
+                } while (isMatch && i < 3);
+            }
+
+            if (_elem.posY > 1 && !isMatch)
+            {
+                int i = 1;
+                do
+                {
+                    if (allElements[_elem.posX, _elem.posY - i].type == _elem.type)
+                        isMatch = true;
+                    i++;
+                } while (isMatch && i < 3);
+            }
+        }
+
+        return isMatch;
+    }
+}
